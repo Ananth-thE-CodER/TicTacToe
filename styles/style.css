@@ -109,6 +109,18 @@ div.close span:hover {
 .score-box {
     width: 100%;
 }
+.round-result {
+    display: flex;
+    justify-content: space-evenly;
+}
+div.round-result .result-div {
+    opacity: 1;
+    transition: opacity 0.8s ease-out;
+    display: block;
+}
+div.round-result div.result-div.hidden {
+    opacity: 0;
+}
 .names {
     display: flex;
     gap: 20px;

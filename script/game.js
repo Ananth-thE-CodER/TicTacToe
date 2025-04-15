@@ -3,6 +3,7 @@ const Gameboard = (() => {
 	const totalColumns = 3
 	const board = [];
 
+	// Initialize board array.
 	const initBoard = () => {
 		for (let row=0; row < totalRows; row++) {
 			board[row] = [];
@@ -12,14 +13,34 @@ const Gameboard = (() => {
 		}
 	}
 	
+	// Returns board
 	const getBoard = () => {
 		return board;
 	}
 	
+	// Adds marker of current player to specific grid item.
 	const addMarker = (row, col, playerMarker, cellElement) => {
 		board[row][col].setMarker(playerMarker, cellElement); 
 	}
+
+	const checkTie = (gameStatus) => {
+		let emptyCell = false;
+		for (let row=0; row < totalRows; row++) {
+			if (emptyCell) {
+				break;
+			}
+			for (let column=0; column < totalColumns; column++) {
+				let marker = board[row][column].getMarker();
+				if (!marker.length) {
+					emptyCell = true;
+					break;
+				}
+			}
+		}
+		return (!gameStatus && emptyCell) ? false : true;
+	}
 	
+	// Checks winning condition.
 	const checkWinner = (player) => {
 		let won = false;
 		let tempList;
@@ -96,13 +117,14 @@ const Gameboard = (() => {
 			}
 		}
 		
-		return {won, winningcells: coordinates};
+		return {won, winningcells: coordinates, player};
 	}
 	
-	return {initBoard, getBoard, addMarker, checkWinner}
+	return {initBoard, getBoard, addMarker, checkWinner, checkTie}
 })();
 
 const BoardRenderer = (game) => {
+	// Renders the board to HTML.
 	let board = Gameboard;
 	board.initBoard();
 	board = board.getBoard();
@@ -127,10 +149,13 @@ const BoardRenderer = (game) => {
 
 	let cells = document.querySelectorAll('div.cell')
 
+	//Attaches click event on each grid item.
 	eventAttacher(cells, game);
 };
 
-function Cell() {        
+function Cell() { 
+	
+	//Cell Factory function. Includes getMarker() and setMarker() to get and return current marker in grid item.
 	let value = '';
 	
 	const getMarker = () => {
@@ -145,7 +170,8 @@ function Cell() {
 	return {getMarker, setMarker};
 }
 
-function createPlayer(name, playerMarker='') {
+function createPlayer(name, playerMarker='', role=false) {
+	// Factory function to create player.
 	let points = 0;
 	let marker = playerMarker;
 
@@ -157,11 +183,13 @@ function createPlayer(name, playerMarker='') {
 		points = 0;
 		marker = undefined;
 	};
+	const getRole = () => role; // Role: if player is Player 1 or Player 2
 
-	return {name, marker, addPoint, getPoints, resetPlayer}
+	return {name, marker, addPoint, getPoints, resetPlayer, getRole}
 }
 
 function refreshPoints(players) {
+	// Refreshes score board div once a player wins, updating the score.
 	let scoreDiv = document.querySelector("div.score-div")
 	scoreDiv.innerHTML = ''
 	let player1 = players[0]
@@ -180,7 +208,7 @@ function refreshPoints(players) {
 function GameController(playerOne='Player 1', playerTwo='Player 2') {
 	let board = Gameboard;
 	
-	const players = [createPlayer(playerOne, 'X'), createPlayer(playerTwo, 'O')];
+	const players = [createPlayer(playerOne, 'X', 'p1'), createPlayer(playerTwo, 'O', 'p2')];
 	
 	let activePlayer = players[0];
 	
@@ -204,6 +232,9 @@ function GameController(playerOne='Player 1', playerTwo='Player 2') {
 		})
 	}
 	
+	// Plays each round and checks if current player has won.
+	// If the player wins, point is added, active player switched so that next round is
+	// played by the other player. The result of the round is also returned.
 	const playRound = (row, col, cellElement) => {
 		board.addMarker(row, col, activePlayer.marker, cellElement);
 		let result = board.checkWinner(activePlayer)
@@ -211,6 +242,9 @@ function GameController(playerOne='Player 1', playerTwo='Player 2') {
 			activePlayer.addPoint();
 			switchActivePlayer();
 			return result
+		}
+		else if (board.checkTie(result.won)) {
+			return 'Tied';
 		}
 		switchActivePlayer();
 		return result;
@@ -220,31 +254,47 @@ function GameController(playerOne='Player 1', playerTwo='Player 2') {
 }
 
 function updateBoard(ev, game) {
+	// This is where play round is called.
 	let cellElement = ev.target;
 	let row = cellElement.dataset.cellRow;
 	let col = cellElement.dataset.cellCol;
 
 	let roundResult = game.playRound(row, col, cellElement);
-	if (roundResult.won) {
+	// If player has won, the wining grid items are highlighted for a brief 3 seconds.
+	if (roundResult instanceof Object && roundResult.won) {
 		document.querySelector("div.content-box").classList.add("played")
 		roundResult.winningcells.forEach((coordinate) => {
 			let cell = document.querySelector(`[data-cell-row="${coordinate[0]}"][data-cell-col="${coordinate[1]}"]`);
 			cell.classList.add("backdrop")
 		})
+		let result_div = document.querySelector(`div.${roundResult.player.getRole()}`)
+		flashFade(result_div);
 
-		let winnerTimeOut = setTimeout(() => {
+		// After 3 seconds, the board is reset to play next round.
+		setTimeout(() => {
+			BoardRenderer(game);
+			refreshPoints(game.getAllPlayers());
+			document.querySelector("div.content-box").classList.remove("played")
+		}, 3000)
+	}
+	else if (roundResult === 'Tied') {
+		let result_div = document.querySelector(`div.tied`)
+		flashFade(result_div);
+		setTimeout(() => {
 			BoardRenderer(game);
 			refreshPoints(game.getAllPlayers());
 			document.querySelector("div.content-box").classList.remove("played")
 		}, 3000)
 	}
 	else {
+		// If it is not a winning move, a class is added to prevent click event on the played cell.
 		cellElement.classList.add('played');
 	}
 }
 
 
 function callModal(ev) {
+	// Call modal to accept player name.
 	const body = document.querySelector('div.full-body');
 	body.classList.add('backdrop');
 
@@ -253,6 +303,7 @@ function callModal(ev) {
 }
 
 function closeModal(ev) {
+	// Closes modal and clears input values inside modal.
 	const body = document.querySelector('div.full-body');
 	body.classList.remove('backdrop');
 
@@ -264,13 +315,20 @@ function closeModal(ev) {
 }
 
 function initScoreBoard(p1, p2) {
+	// Shows player names inside score board.
 	let nameElements = document.querySelectorAll(".player-name");
 	nameElements[0].innerHTML = p1;
 	nameElements[1].innerHTML = p2;
 }
 
 function resetScoreBoard() {
-	let boardHTML = `<div class="names">
+	// Part of Game reset. Resets score board html and hides it.
+	let boardHTML = `<div class="round-result">
+						<div class="result-div hidden p1 doodle-font">Won !!</div>
+						<div class="result-div hidden tied doodle-font">Tied !!</div>
+						<div class="result-div hidden p2 doodle-font">Won !!</div>
+					</div>
+					<div class="names">
 						<div class="playername-div">
 							<span class="player-name doodle-font">Player 1</span>
 						</div>
@@ -293,6 +351,7 @@ function resetScoreBoard() {
 }
 
 function eventAttacher(cells, game) {
+	// Attaches click event to play on each grid item.
 	cells.forEach((cell) => {
 		cell.addEventListener('click', (ev) => {
 			updateBoard(ev, game)
@@ -300,13 +359,26 @@ function eventAttacher(cells, game) {
 	})
 }
 
+// Simple function to repeatedly show/hide div
+function flashFade(div) {
+	div.classList.remove('hidden');
+	setTimeout(()=> {
+		div.classList.add("hidden");
+	}, 3000)
+}
+
 function gameStart() {
+	// Called after clicking the start in modal.
+
+	// Takes player names.
 	let playerOneName = document.getElementById("playerOne").value || 'Player 1';
 	let playerTwoName = document.getElementById("playerTwo").value || 'Player 2';
 
+	// Hides Game start button and shows reset button
 	document.querySelector("div.start-btn-div").classList.add('display-none');
 	document.querySelector("div.reset-btn-div").classList.remove('display-none');
 
+	// Score board is initialized.
 	initScoreBoard(playerOneName, playerTwoName);
 
 	let scoreBoard = document.querySelector("div.score-board")
@@ -318,8 +390,7 @@ function gameStart() {
 
 	let cells = document.querySelectorAll('div.cell')
 
-	//eventAttacher(cells, game);
-
+	// When reset button is clicked. Reset Player, game and score.
 	document.querySelector('button.reset-btn').addEventListener('click', () => {
 		game.resetGame();
 		resetScoreBoard();

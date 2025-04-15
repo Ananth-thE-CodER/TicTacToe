@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Doodle+Shadow&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="full-body">
+        <div class="content-box">
+            <div class="title">
+                <span class="title doodle-font">Tic Tac Toe</span>
+            </div>
+            <div class="game-container">
+                <div id="game-box"></div>
+                <div class="score-box">
+                    <div class="score-board display-none">
+                        <div class="names">
+                            <div class="playername-div">
+                                <span class="player-name doodle-font">Player 1</span>
+                            </div>
+                            <div class="playername-div">
+                                <span class="player-name doodle-font">Player 2</span>
+                            </div>
+                        </div>
+                        <div class="score-div">
+                            <div class="player-score-div">
+                                <span class="score doodle-font">0</span>
+                            </div>
+                            <div class="player-score-div">
+                                <span class="score doodle-font">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttons-box">
+                <div class="start-btn-div">
+                    <button class="start-btn doodle-font" onclick="callModal()">Game Start</button>
+                </div>
+                <div class="reset-btn-div display-none">
+                    <button class="reset-btn doodle-font">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="game-modal" class="game-start-modal display-none">
+        <div class="modal-header">
+            <div class="modal-title">
+                <h3 class="doodle-font">Enter your Names !!</h3>
+            </div>
+            <div class="close" onclick="closeModal()">
+                <span class="doodle-font">X</span>
+            </div>
+        </div>
+        <div class="modal-body">
+            <table class="doodle-font">
+                <tr>
+                    <th>Player 1 Name:</th>
+                    <td>
+                        <input id="playerOne" class="doodle-font" placeholder="Player 1">
+                    </td>
+                </tr>
+                <tr>
+                    <th>Player 2 Name:</th>
+                    <td>
+                        <input id="playerTwo" class="doodle-font" placeholder="Player 2">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button id="game-start" onclick="gameStart()" class="doodle-font">Start</button>
+        </div>
+    </div>
+    <script src="./script/game.js"></script>
+</body>
+</html>

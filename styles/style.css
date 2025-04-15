@@ -124,6 +124,10 @@ div.round-result div.result-div.hidden {
 .names {
     display: flex;
     gap: 20px;
+    text-align: center;
+}
+.playername-div {
+    flex: 1;
 }
 .score-board {
     transform: rotate(8deg);
